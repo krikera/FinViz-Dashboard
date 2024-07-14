@@ -16,8 +16,7 @@ A Streamlit-based web application for personal finance analytics. Upload CSV fin
 9. [Customization](#customization)
 10. [Troubleshooting](#troubleshooting)
 11. [Contributing](#contributing)
-12. [License](#license)
-13. [Contact](#contact)
+12. [Contact](#contact)
 
 ## Overview
 The Finance Analytics Dashboard is a powerful, user-friendly web application built with Streamlit that empowers users to gain deep insights into their financial data. By leveraging advanced data visualization techniques and machine learning algorithms, this dashboard provides a comprehensive view of personal or business finances, enabling better financial decision-making.
