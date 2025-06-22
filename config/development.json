@@ -1,0 +1,36 @@
+{
+  "database": {
+    "type": "sqlite",
+    "pool_size": 5,
+    "max_overflow": 10
+  },
+  "security": {
+    "enable_authentication": true,
+    "session_timeout_minutes": 30,
+    "max_login_attempts": 3,
+    "password_min_length": 8
+  },
+  "cache": {
+    "enable_redis": false,
+    "cache_ttl_seconds": 3600,
+    "enable_memory_cache": true
+  },
+  "api": {
+    "enable_real_time_data": false,
+    "yfinance_enabled": true,
+    "rate_limit_per_minute": 60
+  },
+  "ml": {
+    "enable_advanced_models": true,
+    "model_cache_path": "./models",
+    "auto_retrain_days": 7,
+    "anomaly_threshold": 0.05,
+    "prediction_horizon_days": 30
+  },
+  "ui": {
+    "theme": "light",
+    "default_chart_type": "plotly",
+    "enable_animations": true,
+    "max_file_size_mb": 100
+  }
+}

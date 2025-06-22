@@ -27,6 +27,31 @@ Thumbs.db
 *.log
 *.sqlite
 
+# Database files - SENSITIVE DATA
+*.db
+finviz.db
+*.sqlite3
+
+# Configuration files with potential secrets
+config/*.local.json
+config/production.json
+config/secrets.json
+.env
+.env.local
+.env.production
+
+# User data and logs
+logs/
+logs/*.log
+user_data/
+backups/*.db
+backups/*.sql
+
+# Model files that might contain training data
+models/*.pkl
+models/*.model
+models/cache/
+
 # Jupyter Notebooks
 .ipynb_checkpoints
 
