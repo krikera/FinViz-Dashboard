@@ -4,14 +4,46 @@ import base64
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
-from utils import custom_date_parser, categorize_transaction, enhanced_transaction_analysis, smart_search_transactions, generate_insights_summary, safe_csv_reader, normalize_column_names
-from data_processing import prepare_data, perform_eda, track_budget
-from visualization import visualize_cash_flow, visualize_budget_tracking, visualize_spending_patterns_and_predictions
-from model import detect_anomalies, train_predict_model
-from nlp_visualizations import display_nlp_dashboard
-from userinput import user_input_handler
 
-# Import new enterprise features
+# Core imports - always available
+try:
+    from utils import custom_date_parser, categorize_transaction, enhanced_transaction_analysis, smart_search_transactions, generate_insights_summary, safe_csv_reader, normalize_column_names
+    UTILS_AVAILABLE = True
+except ImportError:
+    UTILS_AVAILABLE = False
+    print("Utils not available - using basic functionality")
+
+try:
+    from data_processing import prepare_data, perform_eda, track_budget
+    DATA_PROCESSING_AVAILABLE = True
+except ImportError:
+    DATA_PROCESSING_AVAILABLE = False
+
+try:
+    from visualization import visualize_cash_flow, visualize_budget_tracking, visualize_spending_patterns_and_predictions
+    VISUALIZATION_AVAILABLE = True
+except ImportError:
+    VISUALIZATION_AVAILABLE = False
+
+try:
+    from model import detect_anomalies, train_predict_model
+    MODEL_AVAILABLE = True
+except ImportError:
+    MODEL_AVAILABLE = False
+
+try:
+    from nlp_visualizations import display_nlp_dashboard
+    NLP_AVAILABLE = True
+except ImportError:
+    NLP_AVAILABLE = False
+
+try:
+    from userinput import user_input_handler
+    USER_INPUT_AVAILABLE = True
+except ImportError:
+    USER_INPUT_AVAILABLE = False
+
+# Enterprise features (optional for deployment)
 try:
     from auth import get_auth, show_auth_sidebar, handle_auth_modals, require_auth, get_current_user_id
     from config import display_config_ui, get_config
@@ -20,15 +52,64 @@ try:
     from advanced_visualizations import get_visualization_engine
     ENTERPRISE_FEATURES = True
 except ImportError as e:
-    print(f"Enterprise features not available: {e}")
+    print(f"Enterprise features not available in deployment: {e}")
     ENTERPRISE_FEATURES = False
 
-# Import enhanced features
+# Enhanced export (optional)
 try:
     from enhanced_export import create_enhanced_export_interface
     ENHANCED_EXPORT_AVAILABLE = True
 except ImportError:
     ENHANCED_EXPORT_AVAILABLE = False
+
+# Basic fallback functions when modules aren't available
+def basic_date_parser(date_str):
+    """Basic date parsing fallback"""
+    try:
+        return pd.to_datetime(date_str)
+    except:
+        return None
+
+def basic_categorize_transaction(description):
+    """Basic categorization fallback"""
+    if pd.isna(description):
+        return 'other'
+    desc_lower = str(description).lower()
+    if any(word in desc_lower for word in ['grocery', 'food', 'restaurant', 'cafe']):
+        return 'food_dining'
+    elif any(word in desc_lower for word in ['gas', 'fuel', 'transport']):
+        return 'transportation'
+    elif any(word in desc_lower for word in ['shop', 'store', 'amazon', 'purchase']):
+        return 'shopping'
+    else:
+        return 'other'
+
+def basic_safe_csv_reader(uploaded_file):
+    """Basic CSV reader fallback"""
+    try:
+        df = pd.read_csv(uploaded_file)
+        return df, 'utf-8', ','
+    except Exception as e:
+        st.error(f"Error reading CSV: {str(e)}")
+        return None, None, None
+
+def basic_normalize_column_names(df):
+    """Basic column name normalization"""
+    column_mapping = {
+        'date': 'Date',
+        'description': 'Description', 
+        'desc': 'Description',
+        'amount': 'Amount',
+        'deposit': 'Deposits',
+        'deposits': 'Deposits',
+        'withdrawal': 'Withdrawls',
+        'withdrawals': 'Withdrawls',
+        'withdrawls': 'Withdrawls',
+        'balance': 'Balance'
+    }
+    
+    df.columns = [column_mapping.get(col.lower(), col) for col in df.columns]
+    return df
 
 def main():
     st.set_page_config(
@@ -969,17 +1050,27 @@ def process_uploaded_file_enhanced(uploaded_file):
             progress_bar.progress(20)
             
             try:
-                financial_data, encoding, separator = safe_csv_reader(uploaded_file)
+                if UTILS_AVAILABLE:
+                    financial_data, encoding, separator = safe_csv_reader(uploaded_file)
+                else:
+                    financial_data, encoding, separator = basic_safe_csv_reader(uploaded_file)
+                    
+                if financial_data is None:
+                    return None
+                    
                 status_text.success(f"✅ File read successfully (encoding: {encoding}, separator: '{separator}')")
             except Exception as e:
                 status_text.error(f"❌ Failed to read file: {str(e)}")
-                show_troubleshooting_tips()
                 return None
             
             # Step 2: Normalize columns (40%)
             status_text.info("🔧 Normalizing column names...")
             progress_bar.progress(40)
-            financial_data = normalize_column_names(financial_data)
+            
+            if UTILS_AVAILABLE:
+                financial_data = normalize_column_names(financial_data)
+            else:
+                financial_data = basic_normalize_column_names(financial_data)
             
             # Step 3: Validate structure (60%)
             status_text.info("✅ Validating data structure...")
@@ -1010,7 +1101,11 @@ def process_uploaded_file_enhanced(uploaded_file):
             status_text.info("📅 Processing dates...")
             progress_bar.progress(80)
             
-            financial_data['Date'] = financial_data['Date'].apply(custom_date_parser)
+            if UTILS_AVAILABLE:
+                financial_data['Date'] = financial_data['Date'].apply(custom_date_parser)
+            else:
+                financial_data['Date'] = financial_data['Date'].apply(basic_date_parser)
+                
             initial_count = len(financial_data)
             financial_data = financial_data.dropna(subset=['Date'])
             
@@ -1026,7 +1121,10 @@ def process_uploaded_file_enhanced(uploaded_file):
             process_amount_columns(financial_data)
             
             # Add categories
-            financial_data['Category'] = financial_data['Description'].apply(categorize_transaction)
+            if UTILS_AVAILABLE:
+                financial_data['Category'] = financial_data['Description'].apply(categorize_transaction)
+            else:
+                financial_data['Category'] = financial_data['Description'].apply(basic_categorize_transaction)
             
             # Clear progress indicators
             progress_bar.empty()
@@ -1040,7 +1138,6 @@ def process_uploaded_file_enhanced(uploaded_file):
             
     except Exception as e:
         st.error(f"❌ Unexpected error processing file: {str(e)}")
-        show_troubleshooting_tips()
         return None
 
 def process_amount_columns(financial_data):
