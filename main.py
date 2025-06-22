@@ -185,74 +185,104 @@ def main():
                 with st.expander("📤 Enhanced Export Center", expanded=False):
                     create_enhanced_export_interface(filtered_data)
             
-            # Initialize user input handler and display settings
-            user_input_handler.display_user_settings()
-            
-            # Get user preferences
-            budget_limits = user_input_handler.preferences.get("budget_categories", {})
-            
-            # Get user filters (traditional)
-            filters = user_input_handler.get_user_filters(filtered_data)
+            # Initialize user input handler and display settings (only if available)
+            if USER_INPUT_AVAILABLE:
+                user_input_handler.display_user_settings()
+                
+                # Get user preferences
+                budget_limits = user_input_handler.preferences.get("budget_categories", {})
+                
+                # Get user filters (traditional)
+                filters = user_input_handler.get_user_filters(filtered_data)
+            else:
+                # Fallback when user input handler not available
+                budget_limits = {}
+                filters = {}
+                st.info("💡 Advanced user settings not available in this deployment")
             
             # Apply traditional filters
-            filtered_data = user_input_handler.apply_filters(filtered_data, filters)
+            if USER_INPUT_AVAILABLE:
+                filtered_data = user_input_handler.apply_filters(filtered_data, filters)
 
             # Detect anomalies if enabled
-            if user_input_handler.preferences.get("show_anomalies", True):
+            if MODEL_AVAILABLE and USER_INPUT_AVAILABLE and user_input_handler.preferences.get("show_anomalies", True):
                 filtered_data = detect_anomalies(filtered_data)
                 anomalies = filtered_data[filtered_data['Anomaly'] == -1]
                 if not anomalies.empty:
                     st.warning(f"⚠️ Detected {len(anomalies)} anomalous transactions")
                     with st.expander("View Anomalous Transactions"):
                         st.write(anomalies[['Date', 'Description', 'Withdrawls', 'Deposits']])
+            elif not MODEL_AVAILABLE:
+                st.info("💡 Anomaly detection not available in this deployment")
 
             # Enhanced visualizations with real-time updates
-            render_enhanced_visualizations(filtered_data)
+            if VISUALIZATION_AVAILABLE:
+                render_enhanced_visualizations(filtered_data)
+            else:
+                # Basic visualization fallback
+                render_basic_dashboard(filtered_data)
 
             # Use user's preferred chart type
-            chart_type = user_input_handler.preferences.get("default_chart_type", "Line Chart")
+            chart_type = "Line Chart"  # Default
+            if USER_INPUT_AVAILABLE:
+                chart_type = user_input_handler.preferences.get("default_chart_type", "Line Chart")
 
             # Perform EDA with filtered data
-            perform_eda(filtered_data, chart_type)
+            if DATA_PROCESSING_AVAILABLE:
+                perform_eda(filtered_data, chart_type)
+            else:
+                st.info("💡 Advanced EDA not available in this deployment")
 
+            # Summary statistics in sidebar
             st.sidebar.subheader('Summary Statistics')
             st.sidebar.write(filtered_data.describe())
             
-            # Quick actions
-            quick_action = user_input_handler.display_quick_actions()
-            
-            # Add NLP insights in sidebar
-            if user_input_handler.preferences.get("nlp_insights", True):
-                st.sidebar.subheader('🧠 AI Insights')
-                if st.sidebar.button('Generate AI Summary') or quick_action == "generate_insights":
-                    with st.sidebar:
-                        with st.spinner('Analyzing transactions...'):
-                            insights_summary = generate_insights_summary(filtered_data)
-                            st.markdown(insights_summary)
+            # Quick actions (only if user input handler available)
+            if USER_INPUT_AVAILABLE:
+                quick_action = user_input_handler.display_quick_actions()
+                
+                # Add NLP insights in sidebar
+                if user_input_handler.preferences.get("nlp_insights", True) and NLP_AVAILABLE:
+                    st.sidebar.subheader('🧠 AI Insights')
+                    if st.sidebar.button('Generate AI Summary') or quick_action == "generate_insights":
+                        with st.sidebar:
+                            with st.spinner('Analyzing transactions...'):
+                                if UTILS_AVAILABLE:
+                                    insights_summary = generate_insights_summary(filtered_data)
+                                    st.markdown(insights_summary)
+                                else:
+                                    st.info("AI insights not available in this deployment")
 
-            # Get widget selection from user input handler
-            selected_widgets = user_input_handler.get_widget_selection()
-            
-            # Available widgets
-            available_widgets = {
-                "Cash Flow": visualize_cash_flow,
-                "Budget Tracking": lambda data, chart: visualize_budget_tracking(data, chart, budget_limits),
-                "Spending Patterns and Predictions": visualize_spending_patterns_and_predictions,
-                "🧠 NLP Analysis": lambda data, chart: display_nlp_dashboard(data)
-            }
+                # Get widget selection from user input handler
+                selected_widgets = user_input_handler.get_widget_selection()
+                
+                # Available widgets
+                available_widgets = {}
+                if VISUALIZATION_AVAILABLE:
+                    available_widgets = {
+                        "Cash Flow": visualize_cash_flow,
+                        "Budget Tracking": lambda data, chart: visualize_budget_tracking(data, chart, {}),
+                        "Spending Patterns and Predictions": visualize_spending_patterns_and_predictions,
+                    }
+                    if NLP_AVAILABLE:
+                        available_widgets["🧠 NLP Analysis"] = lambda data, chart: display_nlp_dashboard(data)
 
-            for widget in selected_widgets:
-                st.subheader(widget)
-                if widget in available_widgets:
-                    if widget == "🧠 NLP Analysis":
-                        available_widgets[widget](filtered_data, chart_type)
+                for widget in selected_widgets:
+                    st.subheader(widget)
+                    if widget in available_widgets:
+                        if widget == "🧠 NLP Analysis":
+                            available_widgets[widget](filtered_data, chart_type)
+                        else:
+                            available_widgets[widget](filtered_data, chart_type)
                     else:
-                        available_widgets[widget](filtered_data, chart_type)
-                else:
-                    st.warning(f"Widget '{widget}' not available.")
+                        st.warning(f"Widget '{widget}' not available in this deployment.")
 
-            # Enhanced Data Entry
-            render_enhanced_data_entry(filtered_data)
+            # Enhanced Data Entry (only if available)
+            if USER_INPUT_AVAILABLE:
+                render_enhanced_data_entry(filtered_data)
+            else:
+                # Basic export functionality
+                render_basic_export(filtered_data)
 
     # Portfolio View Tab (Enterprise Feature)
     if ENTERPRISE_FEATURES and portfolio_tab:
@@ -461,6 +491,15 @@ def enable_keyboard_shortcuts():
 
 def apply_interactive_filters(data: pd.DataFrame) -> pd.DataFrame:
     """Apply interactive real-time filters"""
+    
+    # Simple fallback when advanced features not available
+    if not USER_INPUT_AVAILABLE:
+        with st.sidebar:
+            st.markdown("---")
+            st.markdown("### 🎛️ Basic Filters")
+            st.info("💡 Interactive filtering not available in this deployment")
+        return data
+    
     with st.sidebar:
         st.markdown("---")
         st.markdown("### 🎛️ Interactive Filters")
@@ -590,7 +629,7 @@ def apply_interactive_filters(data: pd.DataFrame) -> pd.DataFrame:
 
 def show_filter_impact(original_data: pd.DataFrame, filtered_data: pd.DataFrame):
     """Show the impact of current filters"""
-    if st.session_state.interactive_filters_enabled:
+    if hasattr(st.session_state, 'interactive_filters_enabled') and st.session_state.interactive_filters_enabled:
         original_count = len(original_data)
         filtered_count = len(filtered_data)
         
@@ -1094,7 +1133,10 @@ def process_uploaded_file_enhanced(uploaded_file):
             
             if missing_columns:
                 status_text.error(f"❌ Missing required columns: {missing_columns}")
-                show_column_requirements(financial_data.columns)
+                with st.expander("📋 Column Requirements", expanded=True):
+                    st.error("**Missing Required Columns**")
+                    st.markdown("**✅ Required:** Date, Description")
+                    st.markdown(f"**📊 Your columns:** {', '.join(financial_data.columns)}")
                 return None
             
             # Step 4: Process dates (80%)
@@ -1332,6 +1374,88 @@ def show_feature_tour():
     
     st.markdown("---")
     st.info("💡 **Pro Tip:** Try enabling real-time filtering and then exporting a professional report to see all features working together!")
+
+def render_basic_dashboard(data: pd.DataFrame):
+    """Basic dashboard when advanced visualizations aren't available"""
+    st.markdown("### 📈 Basic Financial Dashboard")
+    
+    if data.empty:
+        st.warning("No data available for visualization")
+        return
+    
+    # Basic metrics
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        total_income = data['Deposits'].sum() if 'Deposits' in data.columns else 0
+        st.metric("Total Income", f"${total_income:,.2f}")
+    with col2:
+        total_expenses = data['Withdrawls'].sum() if 'Withdrawls' in data.columns else 0
+        st.metric("Total Expenses", f"${total_expenses:,.2f}")
+    with col3:
+        net_flow = total_income - total_expenses
+        st.metric("Net Flow", f"${net_flow:,.2f}")
+    with col4:
+        transaction_count = len(data)
+        st.metric("Total Transactions", f"{transaction_count:,}")
+    
+    # Basic monthly chart if date column exists
+    if 'Date' in data.columns:
+        try:
+            data['Month'] = pd.to_datetime(data['Date']).dt.to_period('M')
+            monthly_data = data.groupby('Month').agg({
+                'Deposits': 'sum',
+                'Withdrawls': 'sum'
+            }).reset_index()
+            
+            if not monthly_data.empty:
+                monthly_data['Month'] = monthly_data['Month'].dt.to_timestamp()
+                monthly_data['Net Flow'] = monthly_data['Deposits'] - monthly_data['Withdrawls']
+                
+                # Simple bar chart
+                fig = go.Figure()
+                fig.add_trace(go.Bar(
+                    x=monthly_data['Month'],
+                    y=monthly_data['Deposits'],
+                    name='Income',
+                    marker_color='#28a745'
+                ))
+                fig.add_trace(go.Bar(
+                    x=monthly_data['Month'],
+                    y=-monthly_data['Withdrawls'],
+                    name='Expenses',
+                    marker_color='#dc3545'
+                ))
+                
+                fig.update_layout(
+                    title="Monthly Cash Flow",
+                    xaxis_title="Month",
+                    yaxis_title="Amount ($)",
+                    height=400
+                )
+                
+                st.plotly_chart(fig, use_container_width=True)
+        except Exception as e:
+            st.error(f"Error creating basic chart: {str(e)}")
+
+def render_basic_export(data: pd.DataFrame):
+    """Basic export functionality when enhanced export isn't available"""
+    with st.sidebar:
+        st.markdown("---")
+        st.header('📤 Export Data')
+        
+        if st.button("📥 Download CSV"):
+            csv = data.to_csv(index=False)
+            b64 = base64.b64encode(csv.encode()).decode()
+            href = f'<a href="data:file/csv;base64,{b64}" download="financial_data.csv">Click to Download CSV</a>'
+            st.markdown(href, unsafe_allow_html=True)
+            st.success("✅ CSV ready for download!")
+        
+        if st.button("📊 Download JSON"):
+            json_data = data.to_json(orient='records', date_format='iso')
+            b64 = base64.b64encode(json_data.encode()).decode()
+            href = f'<a href="data:file/json;base64,{b64}" download="financial_data.json">Click to Download JSON</a>'
+            st.markdown(href, unsafe_allow_html=True)
+            st.success("✅ JSON ready for download!")
 
 if __name__ == '__main__':
     main()
