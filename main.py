@@ -695,7 +695,8 @@ def render_interactive_cash_flow(data: pd.DataFrame):
             y=-monthly_data['Withdrawls'],
             name='Expenses',
             marker_color='#dc3545',
-            hovertemplate='<b>Expenses</b><br>%{x}<br>$%{y:,.2f}<extra></extra>'
+            hovertemplate='<b>Expenses</b><br>%{x}<br>$%{customdata:,.2f}<extra></extra>',
+            customdata=monthly_data['Withdrawls']
         ))
         
         # Add net flow line

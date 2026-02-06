@@ -123,7 +123,8 @@ def render_monthly_cash_flow(cash_flow):
                 y=-cash_flow['Withdrawls'],
                 name='Expenses',
                 marker_color='#dc3545',
-                hovertemplate='Expenses: $%{y:,.2f}<extra></extra>'
+                hovertemplate='Expenses: $%{customdata:,.2f}<extra></extra>',
+                customdata=cash_flow['Withdrawls']
             ),
             row=1, col=1
         )
@@ -152,7 +153,7 @@ def render_monthly_cash_flow(cash_flow):
                 name='Cumulative Flow',
                 line=dict(color='#17a2b8', width=3),
                 marker=dict(size=6),
-                fill='tonexty' if cumulative_flow.iloc[-1] > 0 else 'tozeroy',
+                fill='tozeroy',
                 fillcolor='rgba(23, 162, 184, 0.1)',
                 hovertemplate='Cumulative: $%{y:,.2f}<extra></extra>'
             ),
@@ -275,12 +276,18 @@ def render_cash_flow_trends(cash_flow):
             col1, col2 = st.columns(2)
             
             with col1:
-                income_growth = ((cash_flow['Deposits'].iloc[-1] - cash_flow['Deposits'].iloc[0]) / cash_flow['Deposits'].iloc[0] * 100) if cash_flow['Deposits'].iloc[0] != 0 else 0
-                st.metric("Income Growth", f"{income_growth:.1f}%")
+                first_income = cash_flow['Deposits'].iloc[0]
+                last_income = cash_flow['Deposits'].iloc[-1]
+                income_growth = ((last_income - first_income) / first_income * 100) if first_income > 0 else 0
+                delta_color = "normal" if income_growth >= 0 else "inverse"
+                st.metric("Income Growth", f"{income_growth:.1f}%", delta=f"{income_growth:+.1f}%", delta_color=delta_color)
             
             with col2:
-                expense_growth = ((cash_flow['Withdrawls'].iloc[-1] - cash_flow['Withdrawls'].iloc[0]) / cash_flow['Withdrawls'].iloc[0] * 100) if cash_flow['Withdrawls'].iloc[0] != 0 else 0
-                st.metric("Expense Growth", f"{expense_growth:.1f}%")
+                first_expense = cash_flow['Withdrawls'].iloc[0]
+                last_expense = cash_flow['Withdrawls'].iloc[-1]
+                expense_growth = ((last_expense - first_expense) / first_expense * 100) if first_expense > 0 else 0
+                delta_color = "inverse" if expense_growth >= 0 else "normal"
+                st.metric("Expense Growth", f"{expense_growth:.1f}%", delta=f"{expense_growth:+.1f}%", delta_color=delta_color)
                 
     except Exception as e:
         logger.error(f"Error in render_cash_flow_trends: {e}")

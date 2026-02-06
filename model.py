@@ -1,25 +1,36 @@
 import pandas as pd
-from sklearn.model_selection import train_test_split
+import numpy as np
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import IsolationForest
 
 def detect_anomalies(data):
-    clf = IsolationForest(contamination=0.01, random_state=42)
+    if len(data) < 10:
+        data['Anomaly'] = 1
+        return data
+    contamination = min(0.05, max(0.01, 5.0 / len(data)))
+    clf = IsolationForest(contamination=contamination, random_state=42)
     data['Anomaly'] = clf.fit_predict(data[['Deposits', 'Withdrawls']])
     return data
 
 def train_predict_model(data):
     data = data[['Date', 'Withdrawls']].copy()
     data['Date'] = pd.to_datetime(data['Date'])
+    data = data.sort_values('Date').reset_index(drop=True)
     data['DateOrdinal'] = data['Date'].apply(lambda x: x.toordinal())
     X = data['DateOrdinal'].values.reshape(-1, 1)
     y = data['Withdrawls'].values
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    split_idx = int(len(data) * 0.8)
+    if split_idx < 2 or (len(data) - split_idx) < 1:
+        return None
+
+    X_train, X_test = X[:split_idx], X[split_idx:]
+    y_train, y_test = y[:split_idx], y[split_idx:]
+
     model = LinearRegression()
     model.fit(X_train, y_train)
 
-    predictions = model.predict(X_test)
+    predictions = np.maximum(model.predict(X_test), 0)
     results = pd.DataFrame({'DateOrdinal': X_test.flatten(), 'Actual': y_test, 'Predicted': predictions})
     results['Date'] = results['DateOrdinal'].apply(lambda x: pd.Timestamp.fromordinal(int(x)))
     results = results.drop('DateOrdinal', axis=1)
