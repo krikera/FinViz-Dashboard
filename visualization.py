@@ -47,7 +47,7 @@ def visualize_data(data, column, title, chart_type):
         
         # Configure Plotly chart
         fig.update_layout(
-            template="plotly_white",
+            template="plotly_dark",
             title_font_size=16,
             height=500,
             hovermode='x unified'
@@ -111,7 +111,7 @@ def render_monthly_cash_flow(cash_flow):
                 x=cash_flow['Month_str'],
                 y=cash_flow['Deposits'],
                 name='Income',
-                marker_color='#28a745',
+                marker_color='#3fb950',
                 hovertemplate='Income: $%{y:,.2f}<extra></extra>'
             ),
             row=1, col=1
@@ -122,8 +122,9 @@ def render_monthly_cash_flow(cash_flow):
                 x=cash_flow['Month_str'],
                 y=-cash_flow['Withdrawls'],
                 name='Expenses',
-                marker_color='#dc3545',
-                hovertemplate='Expenses: $%{y:,.2f}<extra></extra>'
+                marker_color='#f85149',
+                hovertemplate='Expenses: $%{customdata:,.2f}<extra></extra>',
+                customdata=cash_flow['Withdrawls']
             ),
             row=1, col=1
         )
@@ -135,7 +136,7 @@ def render_monthly_cash_flow(cash_flow):
                 y=cash_flow['Net Flow'],
                 mode='lines+markers',
                 name='Net Flow',
-                line=dict(color='#007bff', width=3),
+                line=dict(color='#58a6ff', width=3),
                 marker=dict(size=8),
                 hovertemplate='Net Flow: $%{y:,.2f}<extra></extra>'
             ),
@@ -150,10 +151,10 @@ def render_monthly_cash_flow(cash_flow):
                 y=cumulative_flow,
                 mode='lines+markers',
                 name='Cumulative Flow',
-                line=dict(color='#17a2b8', width=3),
+                line=dict(color='#39d2c0', width=3),
                 marker=dict(size=6),
-                fill='tonexty' if cumulative_flow.iloc[-1] > 0 else 'tozeroy',
-                fillcolor='rgba(23, 162, 184, 0.1)',
+                fill='tozeroy',
+                fillcolor='rgba(57, 210, 192, 0.1)',
                 hovertemplate='Cumulative: $%{y:,.2f}<extra></extra>'
             ),
             row=2, col=1
@@ -162,9 +163,13 @@ def render_monthly_cash_flow(cash_flow):
         fig.update_layout(
             height=700,
             showlegend=True,
-            template="plotly_white",
+            template="plotly_dark",
             title_text="Monthly Cash Flow Analysis",
-            title_x=0.5
+            title_x=0.0,
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            font=dict(family="Inter, sans-serif", size=12, color="#c5cdd9"),
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
         )
         
         fig.update_xaxes(title_text="Month", row=2, col=1)
@@ -214,7 +219,7 @@ def render_cash_flow_trends(cash_flow):
                 y=cash_flow['Deposits'],
                 mode='lines+markers',
                 name='Income',
-                line=dict(color='#28a745', width=3),
+                line=dict(color='#3fb950', width=3),
                 marker=dict(size=8)
             ),
             row=1, col=1
@@ -226,7 +231,7 @@ def render_cash_flow_trends(cash_flow):
                 y=cash_flow['Withdrawls'],
                 mode='lines+markers',
                 name='Expenses',
-                line=dict(color='#dc3545', width=3),
+                line=dict(color='#f85149', width=3),
                 marker=dict(size=8)
             ),
             row=1, col=1
@@ -239,7 +244,7 @@ def render_cash_flow_trends(cash_flow):
                 y=cash_flow['Net Flow'],
                 mode='lines+markers',
                 name='Net Flow',
-                line=dict(color='#007bff', width=3),
+                line=dict(color='#58a6ff', width=3),
                 marker=dict(size=8)
             ),
             row=1, col=2
@@ -257,14 +262,14 @@ def render_cash_flow_trends(cash_flow):
                     y=trend_line,
                     mode='lines',
                     name='Trend',
-                    line=dict(color='#ff6b35', dash='dash', width=2)
+                    line=dict(color='#d29922', dash='dash', width=2)
                 ),
                 row=1, col=2
             )
         
         fig.update_layout(
             height=500,
-            template="plotly_white",
+            template="plotly_dark",
             showlegend=True
         )
         
@@ -275,12 +280,18 @@ def render_cash_flow_trends(cash_flow):
             col1, col2 = st.columns(2)
             
             with col1:
-                income_growth = ((cash_flow['Deposits'].iloc[-1] - cash_flow['Deposits'].iloc[0]) / cash_flow['Deposits'].iloc[0] * 100) if cash_flow['Deposits'].iloc[0] != 0 else 0
-                st.metric("Income Growth", f"{income_growth:.1f}%")
+                first_income = cash_flow['Deposits'].iloc[0]
+                last_income = cash_flow['Deposits'].iloc[-1]
+                income_growth = ((last_income - first_income) / first_income * 100) if first_income > 0 else 0
+                delta_color = "normal" if income_growth >= 0 else "inverse"
+                st.metric("Income Growth", f"{income_growth:.1f}%", delta=f"${last_income - first_income:+,.0f}", delta_color=delta_color)
             
             with col2:
-                expense_growth = ((cash_flow['Withdrawls'].iloc[-1] - cash_flow['Withdrawls'].iloc[0]) / cash_flow['Withdrawls'].iloc[0] * 100) if cash_flow['Withdrawls'].iloc[0] != 0 else 0
-                st.metric("Expense Growth", f"{expense_growth:.1f}%")
+                first_expense = cash_flow['Withdrawls'].iloc[0]
+                last_expense = cash_flow['Withdrawls'].iloc[-1]
+                expense_growth = ((last_expense - first_expense) / first_expense * 100) if first_expense > 0 else 0
+                delta_color = "inverse" if expense_growth >= 0 else "normal"
+                st.metric("Expense Growth", f"{expense_growth:.1f}%", delta=f"${last_expense - first_expense:+,.0f}", delta_color=delta_color)
                 
     except Exception as e:
         logger.error(f"Error in render_cash_flow_trends: {e}")
@@ -307,10 +318,10 @@ def render_detailed_cash_flow_analysis(data, cash_flow):
                 color='Deposits',
                 title="Daily Transaction Activity",
                 labels={'Transaction_Count': 'Number of Transactions'},
-                color_continuous_scale='Viridis'
+                color_continuous_scale='teal'
             )
             
-            fig_volume.update_layout(template="plotly_white", height=400)
+            fig_volume.update_layout(template="plotly_dark", height=400)
             st.plotly_chart(fig_volume, use_container_width=True)
         
         with col2:
@@ -325,8 +336,8 @@ def render_detailed_cash_flow_analysis(data, cash_flow):
                 labels={'Volatility': 'Standard Deviation ($)'}
             )
             
-            fig_vol.update_traces(line=dict(color='#ff6b35', width=3))
-            fig_vol.update_layout(template="plotly_white", height=400)
+            fig_vol.update_traces(line=dict(color='#d29922', width=3))
+            fig_vol.update_layout(template="plotly_dark", height=400)
             st.plotly_chart(fig_vol, use_container_width=True)
         
         # Monthly breakdown table
@@ -407,7 +418,7 @@ def render_budget_overview(budget_analysis):
             xaxis_title="Category",
             yaxis_title="Amount ($)",
             barmode='group',
-            template="plotly_white",
+            template="plotly_dark",
             height=400
         )
         
@@ -442,7 +453,7 @@ def render_budget_progress_bars(budget_analysis):
             title="Budget Usage Percentage",
             xaxis_title="Usage %",
             yaxis_title="Category",
-            template="plotly_white",
+            template="plotly_dark",
             height=400,
             showlegend=False
         )
@@ -539,10 +550,10 @@ def render_spending_patterns(data, chart_type):
                 title="Average Spending by Day of Week",
                 labels={'x': 'Day', 'y': 'Average Amount ($)'},
                 color=daily_spending.values,
-                color_continuous_scale='Blues'
+                color_continuous_scale='teal'
             )
             
-            fig_daily.update_layout(template="plotly_white", height=400)
+            fig_daily.update_layout(template="plotly_dark", height=400)
             st.plotly_chart(fig_daily, use_container_width=True)
         
         with col2:
@@ -557,7 +568,7 @@ def render_spending_patterns(data, chart_type):
                     nbins=20
                 )
                 
-                fig_dist.update_layout(template="plotly_white", height=400)
+                fig_dist.update_layout(template="plotly_dark", height=400)
                 st.plotly_chart(fig_dist, use_container_width=True)
         
         # Spending heatmap by day and category
@@ -574,11 +585,11 @@ def render_spending_patterns(data, chart_type):
                 x=category_pivot.columns,
                 y=category_pivot.index,
                 title="Spending Heatmap: Category vs Day of Week",
-                color_continuous_scale='Blues',
+                color_continuous_scale='teal',
                 aspect='auto'
             )
             
-            fig_heatmap.update_layout(template="plotly_white", height=500)
+            fig_heatmap.update_layout(template="plotly_dark", height=500)
             st.plotly_chart(fig_heatmap, use_container_width=True)
             
     except Exception as e:
@@ -603,7 +614,7 @@ def render_predictions(data):
                 y=data['Withdrawls'],
                 mode='lines+markers',
                 name='Historical Spending',
-                line=dict(color='#007bff', width=2),
+                line=dict(color='#58a6ff', width=2),
                 marker=dict(size=4)
             ))
             
@@ -613,7 +624,7 @@ def render_predictions(data):
                 y=predictions['Predicted'],
                 mode='lines+markers',
                 name='Predicted Spending',
-                line=dict(color='#ff6b35', width=2, dash='dash'),
+                line=dict(color='#d29922', width=2, dash='dash'),
                 marker=dict(size=6)
             ))
             
@@ -621,7 +632,7 @@ def render_predictions(data):
                 title="Spending Predictions",
                 xaxis_title="Date",
                 yaxis_title="Amount ($)",
-                template="plotly_white",
+                template="plotly_dark",
                 height=500
             )
             
@@ -672,7 +683,7 @@ def render_seasonal_analysis(data):
                 markers=True
             )
             
-            fig_monthly.update_layout(template="plotly_white", height=400)
+            fig_monthly.update_layout(template="plotly_dark", height=400)
             fig_monthly.update_xaxes(tickangle=45)
             st.plotly_chart(fig_monthly, use_container_width=True)
         
@@ -687,10 +698,10 @@ def render_seasonal_analysis(data):
                 title="Quarterly Spending Distribution",
                 labels={'x': 'Quarter', 'y': 'Total Amount ($)'},
                 color=quarterly_spending.values,
-                color_continuous_scale='Blues'
+                color_continuous_scale='teal'
             )
             
-            fig_quarterly.update_layout(template="plotly_white", height=400)
+            fig_quarterly.update_layout(template="plotly_dark", height=400)
             st.plotly_chart(fig_quarterly, use_container_width=True)
         
         # Seasonal insights

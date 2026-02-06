@@ -26,7 +26,7 @@ def perform_eda(financial_data, chart_type):
     visualize_data(financial_data, 'Balance', 'Balance Over Time', chart_type)
 
 def track_budget(data, budget_limits):
-    data['Budget Limit'] = data['Category'].map(budget_limits)
+    data['Budget Limit'] = data['Category'].map(budget_limits).fillna(0)
     data['Total Withdrawls'] = data.groupby('Category')['Withdrawls'].transform('sum')
-    data['Over Budget'] = data['Total Withdrawls'] > data['Budget Limit']
+    data['Over Budget'] = (data['Budget Limit'] > 0) & (data['Total Withdrawls'] > data['Budget Limit'])
     return data

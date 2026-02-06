@@ -114,7 +114,7 @@ def basic_normalize_column_names(df):
 def main():
     st.set_page_config(
         page_title='FinViz Dashboard', 
-        page_icon="💰", 
+        page_icon="📊", 
         layout="wide",
         initial_sidebar_state="expanded"
     )
@@ -334,126 +334,196 @@ def initialize_enhanced_session_state():
         st.session_state.last_filter_update = datetime.now()
 
 def apply_dark_theme_styling():
-    """Apply dark theme CSS styling"""
+    """Apply professional financial terminal CSS styling"""
     dark_css = """
     <style>
     /* Base styling */
     .main > div {
-        padding: 1rem 0rem;
+        padding: 0.75rem 0rem;
     }
-    
-    /* Dark theme styling */
+
+    /* Professional dark theme */
     .stApp {
-        background-color: #0e1117;
-        color: #fafafa;
+        background-color: #0a0e14;
+        color: #c5cdd9;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
-    
+
     /* Header styling */
     .main-header {
-        padding: 2rem;
-        border-radius: 15px;
-        margin-bottom: 2rem;
-        text-align: center;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        background: linear-gradient(135deg, #1e3a5f 0%, #2d4a67 100%);
+        padding: 1.25rem 2rem;
+        border-radius: 4px;
+        margin-bottom: 1.5rem;
+        text-align: left;
+        border-bottom: 2px solid #00c896;
+        border-left: none;
+        box-shadow: none;
+        background: #0d1117;
     }
-    
+
     .header-title {
-        font-size: 3rem;
-        font-weight: 800;
+        font-size: 1.6rem;
+        font-weight: 700;
         margin: 0;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        color: white;
+        letter-spacing: 0.5px;
+        color: #e6edf3;
+        text-shadow: none;
     }
-    
+
     .header-subtitle {
-        font-size: 1.2rem;
-        margin: 0.5rem 0;
-        font-weight: 300;
-        color: white;
+        font-size: 0.85rem;
+        margin: 0.25rem 0 0 0;
+        font-weight: 400;
+        color: #7d8590;
+        letter-spacing: 0.3px;
     }
-    
+
+    .header-divider {
+        display: inline-block;
+        width: 3px;
+        height: 28px;
+        background: #00c896;
+        margin-right: 12px;
+        vertical-align: middle;
+        border-radius: 1px;
+    }
+
     /* Metric cards */
     .metric-card {
-        padding: 1.5rem;
-        border-radius: 12px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        border-left: 4px solid #4CAF50;
-        margin-bottom: 1rem;
-        transition: transform 0.2s ease;
-        background: #262730;
-        color: #fafafa;
+        padding: 1rem 1.25rem;
+        border-radius: 4px;
+        box-shadow: none;
+        border-left: 3px solid #00c896;
+        margin-bottom: 0.75rem;
+        transition: border-color 0.2s ease;
+        background: #161b22;
+        color: #c5cdd9;
     }
-    
+
     .metric-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+        border-color: #3fb950;
+        transform: none;
+        box-shadow: none;
     }
-    
+
+    /* Streamlit metric overrides */
+    [data-testid="stMetric"] {
+        background: #161b22;
+        border: 1px solid #21262d;
+        border-radius: 4px;
+        padding: 0.75rem 1rem;
+    }
+
+    [data-testid="stMetricLabel"] {
+        color: #7d8590 !important;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 600;
+    }
+
+    [data-testid="stMetricValue"] {
+        color: #e6edf3 !important;
+        font-weight: 700;
+        font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+    }
+
     /* Buttons */
     .stButton > button {
-        border-radius: 8px;
-        border: 1px solid #404040;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        background: linear-gradient(45deg, #1e3a5f, #2d4a67);
-        color: #fafafa;
+        border-radius: 4px;
+        border: 1px solid #30363d;
+        font-weight: 500;
+        font-size: 0.8rem;
+        transition: all 0.15s ease;
+        background: #21262d;
+        color: #c5cdd9;
+        letter-spacing: 0.3px;
     }
-    
+
     .stButton > button:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        background: #30363d;
+        border-color: #00c896;
+        transform: none;
+        box-shadow: none;
+        color: #e6edf3;
     }
-    
+
     /* File uploader */
     .stFileUploader > div {
-        border: 2px dashed #4CAF50;
-        border-radius: 12px;
-        padding: 2rem;
-        background: rgba(38, 39, 48, 0.5);
+        border: 1px dashed #30363d;
+        border-radius: 4px;
+        padding: 1.5rem;
+        background: #0d1117;
     }
-    
-    /* Success/Error messages */
-    .element-container .stAlert > div {
-        border-radius: 8px;
-        background-color: #2d4a67;
-        color: #fafafa;
+
+    .stFileUploader > div:hover {
+        border-color: #00c896;
     }
-    
+
     /* Interactive filter panel */
     .filter-panel {
-        background: rgba(38, 39, 48, 0.8);
-        border-radius: 10px;
+        background: #0d1117;
+        border-radius: 4px;
         padding: 1rem;
-        margin: 1rem 0;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        margin: 0.75rem 0;
+        border: 1px solid #21262d;
     }
-    
+
     /* Sidebar styling */
     .stSidebar > div {
-        background-color: #1e1e1e;
+        background-color: #0d1117;
+        border-right: 1px solid #21262d;
     }
-    
+
     /* Selectbox styling */
     .stSelectbox > div > div {
-        background-color: #262730;
-        color: #fafafa;
+        background-color: #161b22;
+        color: #c5cdd9;
+        border-color: #30363d;
     }
-    
+
     /* Expander styling */
     .stExpander {
-        background-color: #262730;
-        border: 1px solid #404040;
+        background-color: #161b22;
+        border: 1px solid #21262d;
+        border-radius: 4px;
     }
-    
+
     /* Tabs styling */
     .stTabs [data-baseweb="tab-list"] {
-        background-color: #262730;
+        background-color: #0d1117;
+        border-bottom: 1px solid #21262d;
+        gap: 0;
     }
-    
+
     .stTabs [data-baseweb="tab"] {
-        color: #fafafa;
+        color: #7d8590;
+        font-weight: 500;
+        font-size: 0.8rem;
+        letter-spacing: 0.3px;
+        border-bottom: 2px solid transparent;
+        padding: 0.5rem 1rem;
     }
+
+    .stTabs [data-baseweb="tab"]:hover {
+        color: #e6edf3;
+    }
+
+    .stTabs [aria-selected="true"] {
+        color: #e6edf3 !important;
+        border-bottom: 2px solid #00c896 !important;
+    }
+
+    /* Dataframe styling */
+    .stDataFrame {
+        border: 1px solid #21262d;
+        border-radius: 4px;
+    }
+
+    /* Status badges */
+    .status-positive { color: #3fb950; font-weight: 600; }
+    .status-negative { color: #f85149; font-weight: 600; }
+    .status-neutral { color: #7d8590; font-weight: 600; }
     </style>
     """
     
@@ -639,7 +709,7 @@ def show_filter_impact(original_data: pd.DataFrame, filtered_data: pd.DataFrame)
 
 def render_enhanced_visualizations(data: pd.DataFrame):
     """Render enhanced visualizations with real-time updates"""
-    st.markdown("### 📈 Enhanced Financial Visualizations")
+    st.markdown("### 📈 Financial Overview")
     
     if data.empty:
         st.warning("No data available for visualization")
@@ -685,7 +755,7 @@ def render_interactive_cash_flow(data: pd.DataFrame):
             x=monthly_data['Month'],
             y=monthly_data['Deposits'],
             name='Income',
-            marker_color='#28a745',
+            marker_color='#3fb950',
             hovertemplate='<b>Income</b><br>%{x}<br>$%{y:,.2f}<extra></extra>'
         ))
         
@@ -694,8 +764,9 @@ def render_interactive_cash_flow(data: pd.DataFrame):
             x=monthly_data['Month'],
             y=-monthly_data['Withdrawls'],
             name='Expenses',
-            marker_color='#dc3545',
-            hovertemplate='<b>Expenses</b><br>%{x}<br>$%{y:,.2f}<extra></extra>'
+            marker_color='#f85149',
+            hovertemplate='<b>Expenses</b><br>%{x}<br>$%{customdata:,.2f}<extra></extra>',
+            customdata=monthly_data['Withdrawls']
         ))
         
         # Add net flow line
@@ -704,18 +775,22 @@ def render_interactive_cash_flow(data: pd.DataFrame):
             y=monthly_data['Net_Flow'],
             mode='lines+markers',
             name='Net Flow',
-            line=dict(color='#007bff', width=3),
+            line=dict(color='#58a6ff', width=3),
             marker=dict(size=8),
             hovertemplate='<b>Net Flow</b><br>%{x}<br>$%{y:,.2f}<extra></extra>'
         ))
         
         fig.update_layout(
-            title="Interactive Monthly Cash Flow",
+            title="Monthly Cash Flow",
             xaxis_title="Month",
             yaxis_title="Amount ($)",
-            template="plotly_white",
+            template="plotly_dark",
             height=500,
-            hovermode='x unified'
+            hovermode='x unified',
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            font=dict(family="Inter, sans-serif", size=12, color="#c5cdd9"),
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
         )
         
         st.plotly_chart(fig, use_container_width=True)
@@ -777,7 +852,7 @@ def render_interactive_categories(data: pd.DataFrame):
                 title="Total Spending by Category",
                 labels={'x': 'Amount ($)', 'y': 'Category'},
                 color=category_spending.values,
-                color_continuous_scale='Blues'
+                color_continuous_scale='teal'
             )
             
             fig_bar.update_traces(
@@ -805,11 +880,11 @@ def render_interactive_trends(data: pd.DataFrame):
             )
             
             fig.update_traces(
-                line=dict(color='#007bff', width=2),
+                line=dict(color='#58a6ff', width=2),
                 hovertemplate='<b>Balance</b><br>%{x}<br>$%{y:,.2f}<extra></extra>'
             )
             
-            fig.update_layout(height=400, template="plotly_white")
+            fig.update_layout(height=400, template="plotly_dark")
             st.plotly_chart(fig, use_container_width=True)
         
         # Transaction patterns
@@ -825,7 +900,7 @@ def render_interactive_trends(data: pd.DataFrame):
                 title="Average Spending by Day of Week",
                 labels={'x': 'Day', 'y': 'Average Amount ($)'},
                 color=day_spending.values,
-                color_continuous_scale='Viridis'
+                color_continuous_scale='teal'
             )
             
             fig_day.update_traces(
@@ -855,7 +930,7 @@ def render_interactive_analysis(data: pd.DataFrame):
             )
             
             fig_volume.update_traces(
-                line=dict(color='#17a2b8', width=2),
+                line=dict(color='#39d2c0', width=2),
                 hovertemplate='<b>Transactions</b><br>%{x}<br>Count: %{y}<extra></extra>'
             )
             
@@ -987,11 +1062,11 @@ def initialize_enterprise_features():
         return True  # Continue with basic features
 
 def render_enhanced_header():
-    """Render modern header"""
+    """Render professional financial tool header"""
     st.markdown("""
     <div class="main-header">
-        <h1 class="header-title">💰 FinViz Dashboard</h1>
-        <p class="header-subtitle">Professional Financial Analytics & Insights Platform</p>
+        <h1 class="header-title"><span class="header-divider"></span>FinViz Dashboard</h1>
+        <p class="header-subtitle">Financial Analytics &amp; Insights</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -1417,20 +1492,24 @@ def render_basic_dashboard(data: pd.DataFrame):
                     x=monthly_data['Month'],
                     y=monthly_data['Deposits'],
                     name='Income',
-                    marker_color='#28a745'
+                    marker_color='#3fb950'
                 ))
                 fig.add_trace(go.Bar(
                     x=monthly_data['Month'],
                     y=-monthly_data['Withdrawls'],
                     name='Expenses',
-                    marker_color='#dc3545'
+                    marker_color='#f85149'
                 ))
                 
                 fig.update_layout(
                     title="Monthly Cash Flow",
                     xaxis_title="Month",
                     yaxis_title="Amount ($)",
-                    height=400
+                    height=400,
+                    template="plotly_dark",
+                    paper_bgcolor='rgba(0,0,0,0)',
+                    plot_bgcolor='rgba(0,0,0,0)',
+                    font=dict(family="Inter, sans-serif", size=12, color="#c5cdd9")
                 )
                 
                 st.plotly_chart(fig, use_container_width=True)
