@@ -7,6 +7,7 @@ def detect_anomalies(data):
     if len(data) < 10:
         data['Anomaly'] = 1
         return data
+    # Target ~5 anomalies regardless of dataset size, clamped to [1%, 5%]
     contamination = min(0.05, max(0.01, 5.0 / len(data)))
     clf = IsolationForest(contamination=contamination, random_state=42)
     data['Anomaly'] = clf.fit_predict(data[['Deposits', 'Withdrawls']])
